@@ -1,0 +1,79 @@
+.form-container {
+	position: relative;
+	margin: 10% auto;
+	max-width: 390px
+}
+
+.form-container .form-box {
+	position: relative;
+	width: auto;
+	height: auto!important;
+	padding: 0 0 20px 0;
+	-webkit-box-shadow: 0 0 14px rgba(0, 0, 0, .1);
+	-moz-box-shadow: 0 0 14px rgba(0, 0, 0, .1);
+	box-shadow: 0 0 14px rgba(0, 0, 0, .1)
+}
+
+.bg-white {
+	background-color: #fff!important
+}
+
+.form-container .form-box .form-box-title {
+	position: relative;
+	text-align: center;
+	width: 100%;
+	height: 35px;
+	padding-top: 10px;
+	font-family: 'Lucida Sans', 'trebuchet MS', Arial, Helvetica;
+	font-size: 20px;
+	font-weight: 400;
+	color: #444
+}
+
+.form-container .form-box .form-box-social {
+	padding: 0 10px 10px;
+	text-align: center
+}
+
+.form-container .form-box .form-box-social .social-title {
+	font-size: 14px;
+	font-weight: 500;
+	color: #a9a9a9;
+	margin-top: 10px
+}
+
+.form-container .form-box .form-box-or {
+	position: relative;
+	text-align: center;
+	height: 20px
+}
+
+.form-container .form-box .form-box-or .or-line {
+	position: absolute;
+	height: 1px;
+	top: 10px;
+	left: 40px;
+	right: 40px;
+	background-color: #ccc
+}
+
+.form-container .form-box .form-box-textbox {
+	padding: 10px 40px
+}
+
+.form-container .form-box .form-box-textbox .form-control {
+	-webkit-border-radius: 3px!important;
+	-webkit-background-clip: padding-box!important;
+	-moz-border-radius: 3px!important;
+	-moz-background-clip: padding!important;
+	border-radius: 3px!important;
+	background-clip: padding-box!important
+}
+
+.form-container .form-box .form-box-submit {
+	padding: 10px 40px
+}
+
+.invalid-feedback {
+	text-align: center;
+}

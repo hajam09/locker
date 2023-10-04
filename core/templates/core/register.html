@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/base-style.css' %}"/>
+<div class="container">
+	<br>
+	<div class="form-container">
+		<div class="form-box bg-white" style="-webkit-box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19)">
+			<form method="post">
+				{% csrf_token %}
+				<div class="form-box-title">Register</div>
+				<div class="form-box-social">
+					<div class="social-title ">Create your account. It's free and only takes a minute.</div>
+				</div>
+				<div class="form-box-or">
+					<div class="or-line"></div>
+				</div>
+				<div class="form-box-textbox">
+					{{form | crispy}}
+				</div>
+				<div class="form-box-submit">
+					<input type="submit" class="btn btn-primary btn-block" style="margin-top: 25px;" value="Register Now">
+				</div>
+				<div class="form-box-social">
+					<div class="social-title ">
+						<p class="small text-center">By clicking the Register Now button, you agree to our <br><a href="#" target="_blank">Terms &amp; Conditions</a>, and <a href="#" target="_blank">Privacy Policy</a>
+						</p>
+					</div>
+					<div class="social-title ">Already have an account? <a href="{% url 'core:login' %}">Sign in</a></div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+
+	window.onload = function(e)
+	{
+		$( ".form-box-textbox" ).append( '<span id="span-id-password-visibility" class="pull-right" onclick="showHidePassword();" style="color: #007bff;cursor: pointer;float: right;">Show Password</span>' );
+
+		$('#span-id-password-visibility').mousedown(function(e)
+			{
+				e.preventDefault();
+			}
+		);
+	}
+
+	function showHidePassword()
+	{
+		let password_1 = $("[name='password1']");
+		let password_2 = $("[name='password2']");
+
+		if(password_1.attr("type")=="password")
+		{
+			password_1.attr("type","text");
+			password_2.attr("type","text");
+			$('#span-id-password-visibility').text('Hide Password');
+		}
+		else
+		{
+			password_1.attr("type","password");
+			password_2.attr("type","password");
+			$('#span-id-password-visibility').text('Show Password');
+		}
+	}
+</script>
+{% endblock %}

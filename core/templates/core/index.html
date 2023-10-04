@@ -1,0 +1,193 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <style>
+        i {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+
+    <div class="container">
+        <br/>
+        <br/>
+
+        <form method="GET" action="{{ request.path }}">
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="query" name="query" class="form-control col"
+                           placeholder="Search for anything"/>
+                </div>
+                <div class="col-auto">
+                    <input type="submit" class="btn btn-secondary btn-sm" value="Search"/>
+                </div>
+            </div>
+        </form>
+        <br><br>
+
+        <div id="id-password-container"></div>
+    </div>
+
+    <script type="text/babel">
+
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            let regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        window.onload = function (e) {
+            let query = getParameterByName('query');
+            if (query != null)
+                document.getElementById('query').defaultValue = query;
+        }
+
+        class AccountCardComponent extends React.Component {
+            constructor(props) {
+                super(props);
+
+                let hiddenPassword = "";
+
+                for (const index of this.props.account.password) {
+                    hiddenPassword = hiddenPassword + "*";
+                }
+
+                this.state = {
+                    showPassword: false,
+                    originalPassword: this.props.account.password,
+                    hiddenPassword: hiddenPassword,
+                }
+            }
+
+            deleteAccount = () => {
+                let currentPath = "{% url 'core:index' %}?action=deleteAccount&id=" + this.props.account.id;
+                fetch(currentPath, {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                }).then((response) => response.json())
+                    .then((json) => {
+                        if (json.success) {
+                            location.reload();
+                        }
+                    })
+            }
+
+            updateShowPasswordState = () => {
+                this.setState({
+                    showPassword: !this.state.showPassword,
+                });
+            }
+
+            render() {
+                const eyeIcon = {
+                    fontSize: "16px",
+                }
+                return (
+                    <span>
+                        <br></br>
+                        <div className="card">
+                            <div className="card-body">
+                                <dl className="row">
+                                    <dt className="col-sm-3">URL</dt>
+                                    <dd className="col-sm-9">
+                                        <a href={this.props.account.url}>{this.props.account.name}</a>
+                                    </dd>
+
+                                    <dt className="col-sm-3">Folder</dt>
+                                    <dd className="col-sm-9">{this.props.account.folder}</dd>
+
+                                    <dt className="col-sm-3">Name</dt>
+                                    <dd className="col-sm-9">{this.props.account.name}</dd>
+
+                                    <dt className="col-sm-3">Username</dt>
+                                    <dd className="col-sm-9">{this.props.account.username}</dd>
+
+                                    <dt className="col-sm-3">Email</dt>
+                                    <dd className="col-sm-9">{this.props.account.email}</dd>
+
+                                    <dt className="col-sm-3">Password</dt>
+                                    <dd className="col-sm-9">{this.state.showPassword ? this.state.originalPassword : this.state.hiddenPassword}
+                                        &nbsp;&nbsp;
+                                        {
+                                            this.state.showPassword ?
+                                                <i onClick={this.updateShowPasswordState} style={eyeIcon}
+                                                   className="fa">&#xf06e;</i> :
+                                                <i onClick={this.updateShowPasswordState} style={eyeIcon}
+                                                   className="fa">&#xf070;</i>
+                                        }
+
+                                    </dd>
+
+                                    <dt className="col-sm-3">Notes</dt>
+                                    <dd className="col-sm-9">{this.props.account.notes}</dd>
+                                </dl>
+                                <div className="row">
+                                    <div className="col-6">
+                                        <a className="btn btn-primary btn-block"
+                                           href={`/view-account/${this.props.account.id}/`} role="button">View</a>
+                                    </div>
+                                    <div className="col-6">
+                                        <button type="button" className="btn btn-danger btn-block"
+                                                onClick={this.deleteAccount}>Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                )
+            }
+        }
+
+        class TemplateMainComponent extends React.Component {
+            constructor(props) {
+                super(props);
+
+                let accounts = [];
+                let notes;
+
+                {% for account in accounts %}
+                    notes = "{{ account.notes|linebreaksbr }}".replaceAll("<br>", "\n");
+
+                    accounts.push({
+                        "id": "{{ account.id }}",
+                        "url": "{{ account.url }}",
+                        "name": "{{ account.name }}",
+                        "folder": "{{ account.folder }}",
+                        "username": "{{ account.getUsername }}",
+                        "email": "{{ account.getEmail }}",
+                        "password": "{{ account.getPassword }}",
+                        "notes": notes,
+                    });
+                {% endfor %}
+
+                this.state = {
+                    accounts: accounts,
+                }
+            }
+
+            render() {
+                return (
+                    <span>
+                        {this.state.accounts.map((account) => <AccountCardComponent key={account.id}
+                                                                                    account={account}/>)}
+                    </span>
+                )
+            }
+        }
+
+        ReactDOM.render(<TemplateMainComponent/>, document.getElementById('id-password-container'));
+    </script>
+{% endblock %}
