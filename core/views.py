@@ -161,13 +161,13 @@ def exportAccount(request):
     for account in Account.objects.filter(user=request.user):
         writer.writerow(
             [
-                account.name,
+                account.get_name(),
                 account.get_username(),
                 account.get_email(),
                 account.get_password(),
-                account.folder,
-                account.notes,
-                account.url
+                account.get_folder(),
+                account.get_notes(),
+                account.get_url()
             ]
         )
 
