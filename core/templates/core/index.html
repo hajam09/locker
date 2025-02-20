@@ -91,6 +91,10 @@
                 });
             }
 
+            copyPassword = (password) => {
+                navigator.clipboard.writeText(password);
+            }
+
             render() {
                 const eyeIcon = {
                     fontSize: "16px",
@@ -128,7 +132,9 @@
                                                 <i onClick={this.updateShowPasswordState} style={eyeIcon}
                                                    className="fa">&#xf070;</i>
                                         }
-
+                                        &nbsp;&nbsp;
+                                        <i onClick={() => this.copyPassword(this.state.originalPassword)} style={eyeIcon} className="fa-regular fa-copy"
+                                           data-toggle="tooltip" data-placement="top" title="Copy password"></i>
                                     </dd>
 
                                     <dt className="col-sm-3">Notes</dt>
