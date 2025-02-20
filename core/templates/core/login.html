@@ -1,26 +1,27 @@
-{% extends "core/base.html" %}
+{% extends 'core/base.html' %}
+{% load crispy_forms_filters %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% block content %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/base-style.css' %}"/>
-<div class="container">
+<link rel='stylesheet' type='text/css' href='{% static 'css/base-style.css' %}'/>
+<div class='container'>
 	<br>
-	<div class="form-container">
-		<div class="form-box bg-white" style="-webkit-box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19)">
-			<form method="post">
+	<div class='form-container'>
+		<div class='form-box bg-white' style='-webkit-box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19)'>
+			<form method='post'>
 				{% csrf_token %}
-				<div class="form-box-title">Login</div>
-				<div class="form-box-or">
-					<div class="or-line"></div>
+				<div class='form-box-title'>Login</div>
+				<div class='form-box-or'>
+					<div class='or-line'></div>
 				</div>
-				<div class="form-box-textbox">
+				<div class='form-box-textbox'>
 					{{ form | crispy }}
 				</div>
-				<div class="form-box-submit">
-					<input type="submit" class="btn btn-primary btn-block" value="Login">
+				<div class='form-box-submit'>
+					<input type='submit' class='btn btn-primary btn-block' value='Login'>
 				</div>
-				<div class="form-box-social">
-					<div class="social-title ">Forgot your password? <a href="#">Reset Here</a></div>
+				<div class='form-box-social'>
+					<div class='social-title '>Forgot your password? <a href='#'>Reset Here</a></div>
 				</div>
 			</form>
 		</div>

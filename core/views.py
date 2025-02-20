@@ -7,116 +7,116 @@ from io import StringIO
 from cryptography.fernet import Fernet
 from django.contrib import messages, auth
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 
-from core.forms import LoginForm, AccountForm
+from core.forms import LoginForm, AccountCreateForm, AccountUpdateForm
 from core.forms import RegistrationForm
 from core.models import Account, Secret
-from locker.operations import emailOperations, generalOperations
+from locker.operations import generalOperations
 
 
 def login(request):
     if not request.session.session_key:
         request.session.save()
 
-    if request.method == "POST":
-        uniqueVisitorId = request.session.session_key
+    if request.method == 'POST':
+        unique_visitor_id = request.session.session_key
 
-        if cache.get(uniqueVisitorId) is not None and cache.get(uniqueVisitorId) > 3:
-            cache.set(uniqueVisitorId, cache.get(uniqueVisitorId), 600)
+        if cache.get(unique_visitor_id) is not None and cache.get(unique_visitor_id) > 3:
+            cache.set(unique_visitor_id, cache.get(unique_visitor_id), 600)
 
             messages.error(
                 request, 'Your account has been temporarily locked out because of too many failed login attempts.'
             )
-            return redirect('accounts:login')
+            return redirect('core:index')
 
         form = LoginForm(request, request.POST)
 
         if form.is_valid():
-            cache.delete(uniqueVisitorId)
-            redirectUrl = request.GET.get('next')
-            if redirectUrl:
-                return redirect(redirectUrl)
-            return redirect('quiz:index-view')
+            cache.delete(unique_visitor_id)
+            redirect_url = request.GET.get('next')
+            if redirect_url:
+                return redirect(redirect_url)
+            return redirect('core:index')
 
-        if cache.get(uniqueVisitorId) is None:
-            cache.set(uniqueVisitorId, 1)
+        if cache.get(unique_visitor_id) is None:
+            cache.set(unique_visitor_id, 1)
         else:
-            cache.incr(uniqueVisitorId, 1)
+            cache.incr(unique_visitor_id, 1)
 
     else:
         form = LoginForm(request)
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'core/login.html', context)
 
 
 def logout(request):
     auth.logout(request)
-    previousUrl = request.META.get('HTTP_REFERER')
-    if previousUrl:
-        return redirect(previousUrl)
+    previous_url = request.META.get('HTTP_REFERER')
+    if previous_url:
+        return redirect(previous_url)
     return redirect('core:login')
 
 
 def register(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            newUser = form.save()
-            emailOperations.sendEmailToActivateAccount(request, newUser)
-
-            messages.info(
-                request, 'We\'ve sent you an activation link. Please check your email.'
-            )
-            return redirect('accounts:login')
+            form.save()
+            return redirect('core:login')
     else:
         form = RegistrationForm()
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'core/register.html', context)
 
 
 def performComplexSearch(user, query):
-    filterList = []
-    attributesToSearch = [
+    filter_list = []
+    attributes_to_search = [
         'url', 'name', 'folder', 'notes'
     ]
 
-    filterList.append(reduce(operator.or_, [Q(**{'user__id': user.id})]))
+    filter_list.append(reduce(operator.or_, [Q(**{'user__id': user.id})]))
     if query and query.strip():
-        filterList.append(reduce(operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]))
+        filter_list.append(reduce(operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributes_to_search]))
 
-    return Account.objects.filter(reduce(operator.and_, filterList)).distinct()
+    return Account.objects.filter(reduce(operator.and_, filter_list)).distinct()
 
 
 def index(request):
-    if request.method == "POST":
-        if request.GET.get("action") == "deleteAccount" and request.GET.get("id") is not None:
-            Account.objects.filter(id=request.GET.get("id")).delete()
+    if request.method == 'POST':
+        if request.GET.get('action') == 'delete_account' and request.GET.get('id') is not None:
+            with transaction.atomic():
+                account = Account.objects.filter(id=request.GET.get('id')).first()
+                if account:
+                    account.secret.delete()
+                    account.delete()
 
             response = {
-                "success": True,
+                'success': True,
             }
             return JsonResponse(response, status=HTTPStatus.OK)
 
     accounts = performComplexSearch(request.user, request.GET.get('query'))
     context = {
-        "accounts": accounts
+        'accounts': accounts
     }
     return render(request, 'core/index.html', context)
 
 
 def addAccount(request):
-    if request.method == "POST":
-        form = AccountForm(request, request.POST)
+    if request.method == 'POST':
+        form = AccountCreateForm(request, request.POST)
         if form.is_valid():
             form.save()
             messages.success(
@@ -125,18 +125,18 @@ def addAccount(request):
             )
             return redirect('core:add-account')
     else:
-        form = AccountForm(request)
+        form = AccountCreateForm(request)
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'core/addAccount.html', context)
 
 
 def viewAccount(request, id):
     account = Account.objects.get(user=request.user, id=id)
-    if request.method == "POST":
-        form = AccountForm(request, account, request.POST)
+    if request.method == 'POST':
+        form = AccountUpdateForm(request, account, request.POST)
         if form.is_valid():
             form.update()
             messages.success(
@@ -145,10 +145,10 @@ def viewAccount(request, id):
             )
             return redirect('core:view-account', id=id)
     else:
-        form = AccountForm(request, account)
+        form = AccountUpdateForm(request, account)
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'core/viewAccount.html', context)
 
@@ -162,9 +162,9 @@ def exportAccount(request):
         writer.writerow(
             [
                 account.name,
-                account.getUsername(),
-                account.getEmail(),
-                account.getPassword(),
+                account.get_username(),
+                account.get_email(),
+                account.get_password(),
                 account.folder,
                 account.notes,
                 account.url
@@ -175,11 +175,11 @@ def exportAccount(request):
 
 
 def importAccount(request):
-    if request.method == "POST":
-        if request.POST.get("import-from") == "locker":
+    if request.method == 'POST':
+        if request.POST.get('import-from') == 'locker':
             listOfAccounts = []
             listOfSecrets = []
-            file = request.FILES.get("import-file").read().decode('utf-8')
+            file = request.FILES.get('import-file').read().decode('utf-8')
             csvData = csv.reader(StringIO(file), delimiter=',')
             for row in csvData:
                 if row != ['name', 'username', 'email', 'password', 'folder', 'notes', 'url']:
@@ -212,11 +212,11 @@ def importAccount(request):
                 'Accounts added successfully from Locker'
             )
 
-        elif request.POST.get("import-from") == "bitwarden":
+        elif request.POST.get('import-from') == 'bitwarden':
             listOfAccounts = []
             listOfSecrets = []
 
-            file = request.FILES.get("import-file").read().decode('utf-8')
+            file = request.FILES.get('import-file').read().decode('utf-8')
             csvData = csv.reader(StringIO(file), delimiter=',')
             for row in csvData:
                 if row != ['folder', 'favorite', 'type', 'name', 'notes', 'fields', 'reprompt', 'login_uri',
@@ -251,11 +251,11 @@ def importAccount(request):
                 'Accounts added successfully from Bitwarden'
             )
 
-        elif request.POST.get("import-from") == "last-pass":
+        elif request.POST.get('import-from') == 'last-pass':
             listOfAccounts = []
             listOfSecrets = []
 
-            file = request.FILES.get("import-file").read().decode('utf-8')
+            file = request.FILES.get('import-file').read().decode('utf-8')
             csvData = csv.reader(StringIO(file), delimiter=',')
             for row in csvData:
                 if row != ['url', 'username', 'password', 'totp', 'extra', 'name', 'grouping', 'fav']:

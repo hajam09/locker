@@ -27,11 +27,23 @@ class Account(models.Model):
     def __str__(self):
         return self.name
 
-    def getUsername(self):
-        return generalOperations.decrypt(self.username, self.secret)
+    def get_url(self):
+        return generalOperations.decrypt(self.url, self.secret) if self.url else ''
 
-    def getEmail(self):
-        return generalOperations.decrypt(self.email, self.secret)
+    def get_name(self):
+        return generalOperations.decrypt(self.name, self.secret) if self.name else ''
 
-    def getPassword(self):
-        return generalOperations.decrypt(self.password, self.secret)
+    def get_folder(self):
+        return generalOperations.decrypt(self.folder, self.secret) if self.folder else ''
+
+    def get_username(self):
+        return generalOperations.decrypt(self.username, self.secret) if self.username else ''
+
+    def get_email(self):
+        return generalOperations.decrypt(self.email, self.secret) if self.email else ''
+
+    def get_password(self):
+        return generalOperations.decrypt(self.password, self.secret) if self.password else ''
+
+    def get_notes(self):
+        return generalOperations.decrypt(self.notes, self.secret) if self.notes else ''

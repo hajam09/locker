@@ -1,3 +1,4 @@
+from cryptography.fernet import Fernet
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -7,9 +8,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from core.models import Account
+from core.models import Account, Secret
 from locker.operations import generalOperations
-from cryptography.fernet import Fernet
+
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(
@@ -65,29 +66,29 @@ class RegistrationForm(UserCreationForm):
         email = self.cleaned_data.get('email')
 
         if User.objects.filter(email=email).exists():
-            raise ValidationError("An account already exists for this email address!")
+            raise ValidationError('An account already exists for this email address!')
 
         return email
 
     def clean_password2(self):
-        password1 = self.cleaned_data.get("password1")
-        password2 = self.cleaned_data.get("password2")
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
 
         if password1 and password2 and password1 != password2:
-            raise ValidationError("Your passwords do not match!")
+            raise ValidationError('Your passwords do not match!')
 
         if not generalOperations.isPasswordStrong(password1):
-            raise ValidationError("Your password is not strong enough.")
+            raise ValidationError('Your password is not strong enough.')
 
         return password1
 
     def save(self, commit=True):
         user = User()
-        user.username = self.cleaned_data.get("email")
-        user.email = self.cleaned_data.get("email")
-        user.set_password(self.cleaned_data["password1"])
-        user.first_name = self.cleaned_data.get("first_name")
-        user.last_name = self.cleaned_data.get("last_name")
+        user.username = self.cleaned_data.get('email')
+        user.email = self.cleaned_data.get('email')
+        user.set_password(self.cleaned_data['password1'])
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
         user.is_active = settings.DEBUG
 
         if commit:
@@ -131,7 +132,7 @@ class LoginForm(forms.ModelForm):
             login(self.request, user)
             return self.cleaned_data
 
-        raise ValidationError("Username or Password did not match!")
+        raise ValidationError('Username or Password did not match!')
 
 
 class PasswordResetForm(forms.Form):
@@ -161,17 +162,17 @@ class PasswordResetForm(forms.Form):
         super(PasswordResetForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        newPassword = self.cleaned_data.get('password')
-        confirmPassword = self.cleaned_data.get('repeatPassword')
+        new_password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('repeatPassword')
 
-        if newPassword != confirmPassword:
+        if new_password != confirm_password:
             messages.error(
                 self.request,
                 'Your new password and confirm password does not match.'
             )
             raise ValidationError('Your new password and confirm password does not match.')
 
-        if not generalOperations.isPasswordStrong(newPassword):
+        if not generalOperations.isPasswordStrong(new_password):
             messages.warning(
                 self.request,
                 'Your new password is not strong enough.'
@@ -181,30 +182,30 @@ class PasswordResetForm(forms.Form):
         return self.cleaned_data
 
     def updatePassword(self):
-        newPassword = self.cleaned_data.get('password')
-        self.user.set_password(newPassword)
+        new_password = self.cleaned_data.get('password')
+        self.user.set_password(new_password)
         self.user.save()
 
 
 class AccountForm(forms.Form):
     url = forms.URLField(
-        label="URL",
+        label='URL',
         required=False
     )
     name = forms.CharField(
-        label="Name",
+        label='Name',
         required=False
     )
     folder = forms.CharField(
-        label="Folder",
+        label='Folder',
         required=False
     )
     username = forms.CharField(
-        label="Username",
+        label='Username',
         required=False
     )
     email = forms.EmailField(
-        label="Email",
+        label='Email',
         required=False
     )
     password = forms.CharField(
@@ -215,55 +216,69 @@ class AccountForm(forms.Form):
     notes = forms.CharField(
         label='Notes',
         required=False,
-        widget=forms.Textarea(attrs={"rows": "5"})
+        widget=forms.Textarea(attrs={'rows': '5'})
     )
 
-    def __init__(self, request, account=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(AccountForm, self).__init__(*args, **kwargs)
-        self.user = request.user
-        self.account = account
-
-        if self.account is not None:
-            self.initial['url'] = self.account.url
-            self.initial['name'] = self.account.name
-            self.initial['folder'] = self.account.folder
-            self.initial['username'] = self.account.getUsername()
-            self.initial['email'] = self.account.getEmail()
-            self.initial['password'] = self.account.getPassword()
-            self.initial['notes'] = self.account.notes
-
-    def update(self):
-        self.account.url = self.cleaned_data.get("url")
-        self.account.name = self.cleaned_data.get("name")
-        self.account.folder = self.cleaned_data.get("folder")
-        self.account.username = self.cleaned_data.get("username")
-        self.account.email = self.cleaned_data.get("email")
-        self.account.password = self.cleaned_data.get("password")
-        self.account.notes = self.cleaned_data.get("notes")
-
-        self.account.save()
-        return self.account
-
-    def clean_username(self):
-        return generalOperations.encrypt(self.cleaned_data.get("username"), self.account.secret)
-
-    def clean_email(self):
-        return generalOperations.encrypt(self.cleaned_data.get("email"), self.account.secret)
-
-    def clean_password(self):
-        return generalOperations.encrypt(self.cleaned_data.get("password"), self.account.secret)
 
     def save(self):
-        return Account.objects.create(
-            user=self.user,
-            url=self.cleaned_data.get("url"),
-            name=self.cleaned_data.get("name"),
-            folder=self.cleaned_data.get("folder"),
-            username=self.cleaned_data.get("username"),
-            email=self.cleaned_data.get("email"),
-            password=self.cleaned_data.get("password"),
-            notes=self.cleaned_data.get("notes"),
-        )
+        raise NotImplementedError('Please implement save() method')
+
+    def update(self):
+        raise NotImplementedError('Please implement update() method')
+
+
+class AccountCreateForm(AccountForm):
+
+    def __init__(self, request, *args, **kwargs):
+        super(AccountCreateForm, self).__init__(*args, **kwargs)
+        self.request = request
+
+    def save(self):
+        account = Account()
+        account.user = self.request.user
+        account.secret = Secret.objects.create(key=Fernet.generate_key())
+
+        account.url = generalOperations.encrypt(self.cleaned_data.get('url'), account.secret)
+        account.name = generalOperations.encrypt(self.cleaned_data.get('name'), account.secret)
+        account.folder = generalOperations.encrypt(self.cleaned_data.get('folder'), account.secret)
+        account.username = generalOperations.encrypt(self.cleaned_data.get('username'), account.secret)
+        account.email = generalOperations.encrypt(self.cleaned_data.get('email'), account.secret)
+        account.password = generalOperations.encrypt(self.cleaned_data.get('password'), account.secret)
+        account.notes = generalOperations.encrypt(self.cleaned_data.get('notes'), account.secret)
+        account.save()
+        return
+
+
+class AccountUpdateForm(AccountForm):
+
+    def __init__(self, request, account=None, *args, **kwargs):
+        super(AccountUpdateForm, self).__init__(*args, **kwargs)
+        self.request = request
+        self.account = account
+
+        if self.account is None or not isinstance(account, Account):
+            raise Exception('Account is none, or is not an instance of Account object.')
+
+        self.initial['url'] = generalOperations.decrypt(account.url, self.account.secret)
+        self.initial['name'] = generalOperations.decrypt(account.name, self.account.secret)
+        self.initial['folder'] = generalOperations.decrypt(account.folder, self.account.secret)
+        self.initial['username'] = generalOperations.decrypt(account.username, self.account.secret)
+        self.initial['email'] = generalOperations.decrypt(account.email, self.account.secret)
+        self.initial['password'] = generalOperations.decrypt(account.password, self.account.secret)
+        self.initial['notes'] = generalOperations.decrypt(account.notes, self.account.secret)
+
+    def update(self):
+        self.account.url = generalOperations.encrypt(self.cleaned_data.get('url'), self.account.secret)
+        self.account.name = generalOperations.encrypt(self.cleaned_data.get('name'), self.account.secret)
+        self.account.folder = generalOperations.encrypt(self.cleaned_data.get('folder'), self.account.secret)
+        self.account.username = generalOperations.encrypt(self.cleaned_data.get('username'), self.account.secret)
+        self.account.email = generalOperations.encrypt(self.cleaned_data.get('email'), self.account.secret)
+        self.account.password = generalOperations.encrypt(self.cleaned_data.get('password'), self.account.secret)
+        self.account.notes = generalOperations.encrypt(self.cleaned_data.get('notes'), self.account.secret)
+        self.account.save()
+        return self.account
 
 
 class PasswordUpdateForm(forms.Form):
@@ -301,23 +316,23 @@ class PasswordUpdateForm(forms.Form):
         super(PasswordUpdateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        currentPassword = self.cleaned_data.get('currentPassword')
-        newPassword = self.cleaned_data.get('newPassword')
-        repeatNewPassword = self.cleaned_data.get('repeatNewPassword')
+        current_password = self.cleaned_data.get('currentPassword')
+        new_password = self.cleaned_data.get('newPassword')
+        repeat_new_password = self.cleaned_data.get('repeatNewPassword')
 
-        if currentPassword and not self.user.check_password(currentPassword):
+        if current_password and not self.user.check_password(current_password):
             raise ValidationError('Your current password does not match with the account\'s existing password.')
 
-        if newPassword and repeatNewPassword:
-            if newPassword != repeatNewPassword:
+        if new_password and repeat_new_password:
+            if new_password != repeat_new_password:
                 raise ValidationError('Your new password and confirm password does not match.')
 
-            if not generalOperations.isPasswordStrong(newPassword):
+            if not generalOperations.isPasswordStrong(new_password):
                 raise ValidationError('Your new password is not strong enough.')
 
         return self.cleaned_data
 
     def updatePassword(self):
-        newPassword = self.cleaned_data.get('newPassword')
-        self.user.set_password(newPassword)
+        new_password = self.cleaned_data.get('newPassword')
+        self.user.set_password(new_password)
         self.user.save()

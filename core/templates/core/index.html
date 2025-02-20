@@ -70,7 +70,7 @@
             }
 
             deleteAccount = () => {
-                let currentPath = "{% url 'core:index' %}?action=deleteAccount&id=" + this.props.account.id;
+                let currentPath = "{% url 'core:index' %}?action=delete_account&id=" + this.props.account.id;
                 fetch(currentPath, {
                     method: 'POST',
                     headers: {
@@ -162,14 +162,14 @@
                     notes = "{{ account.notes|linebreaksbr }}".replaceAll("<br>", "\n");
 
                     accounts.push({
-                        "id": "{{ account.id }}",
-                        "url": "{{ account.url }}",
-                        "name": "{{ account.name }}",
-                        "folder": "{{ account.folder }}",
-                        "username": "{{ account.getUsername }}",
-                        "email": "{{ account.getEmail }}",
-                        "password": "{{ account.getPassword }}",
-                        "notes": notes,
+                        'id': "{{ account.id }}",
+                        'url': "{{ account.get_url }}",
+                        'name': "{{ account.get_name }}",
+                        'folder': "{{ account.get_folder }}",
+                        'username': "{{ account.get_username }}",
+                        'email': "{{ account.get_email }}",
+                        'password': "{{ account.get_password }}",
+                        'notes': "{{ account.get_notes }}",
                     });
                 {% endfor %}
 
