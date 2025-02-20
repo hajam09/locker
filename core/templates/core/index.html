@@ -70,19 +70,22 @@
             }
 
             deleteAccount = () => {
-                let currentPath = "{% url 'core:index' %}?action=delete_account&id=" + this.props.account.id;
-                fetch(currentPath, {
-                    method: 'POST',
-                    headers: {
-                        'Content-type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    }
-                }).then((response) => response.json())
-                    .then((json) => {
-                        if (json.success) {
-                            location.reload();
+                const isConfirmed = window.confirm("Are you sure you want to delete your account?");
+                if (isConfirmed) {
+                    let currentPath = "{% url 'core:index' %}?action=delete_account&id=" + this.props.account.id;
+                    fetch(currentPath, {
+                        method: 'POST',
+                        headers: {
+                            'Content-type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
                         }
-                    })
+                    }).then((response) => response.json())
+                        .then((json) => {
+                            if (json.success) {
+                                location.reload();
+                            }
+                        });
+                }
             }
 
             updateShowPasswordState = () => {
